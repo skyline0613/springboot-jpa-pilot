@@ -24,7 +24,7 @@ public class ClaimMain {
   private String description;
 
   @Column(name = "published")
-  private boolean published;
+  private Boolean published;
   
   @JsonIgnore
   @OneToMany(mappedBy = "claimMain", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -34,7 +34,7 @@ public class ClaimMain {
 
   }
 
-  public ClaimMain(String title, String description, boolean published) {
+  public ClaimMain(String title, String description, Boolean published) {
     this.title = title;
     this.description = description;
     this.published = published;
@@ -60,11 +60,11 @@ public class ClaimMain {
     this.description = description;
   }
 
-  public boolean isPublished() {
+  public Boolean isPublished() {
     return published;
   }
 
-  public void setPublished(boolean isPublished) {
+  public void setPublished(Boolean isPublished) {
     this.published = isPublished;
   }
   

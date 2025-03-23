@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,6 +43,8 @@ public class ClaimMainController {
 		if (title == null)
 			claimMainRepository.findAll().forEach(claimMain::add);
 		else
+			//Query by  Query Method
+			//Ref to https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html
 			claimMainRepository.findByTitleContaining(title).forEach(claimMain::add);
 
 		if (claimMain.isEmpty()) {
@@ -57,6 +63,17 @@ public class ClaimMainController {
 		else
 			//JPQL example
 			claimMainRepository.findByDesc(desc).forEach(claimMain::add);
+		
+			claimMainRepository.findByDescription(desc).forEach(claimMain::add);
+			
+			claimMainRepository.findRawMapByDesc(desc).forEach(m->{
+				for (String name: m.keySet()) {
+				    String key = name.toString();
+				    String value = m.get(name).toString();
+				    System.out.println(key + " " + value);
+				}
+				
+			});
 
 		if (claimMain.isEmpty()) {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -80,6 +97,27 @@ public class ClaimMainController {
 		System.out.println(claimMain.getComments().size());
 		return new ResponseEntity<>(claimMain, HttpStatus.OK);
 	}
+	
+	/**
+	 * Query by example 
+	 * Refer to https://docs.spring.io/spring-data/jpa/reference/repositories/query-by-example.html
+	 * @param parm
+	 * @return
+	 */
+	@PostMapping("/claim-main/example")
+	public ResponseEntity<List<ClaimMain>> queryClaimMainByExample(@RequestBody ClaimMain parm) {
+		ExampleMatcher matcher = ExampleMatcher.matching()
+				.withIgnorePaths("id")
+		.withStringMatcher(StringMatcher.STARTING); 
+				//.withIgnoreCase(true);
+		ClaimMain claimMain = new ClaimMain();
+		claimMain.setDescription(parm.getDescription());
+		Example<ClaimMain> example = Example.of(claimMain, matcher);		
+		List<ClaimMain> list = new ArrayList<ClaimMain>();
+		claimMainRepository.findAll(example).forEach(list::add);
+		return new ResponseEntity<>(list, HttpStatus.OK);
+	}
+	
 
 	@PostMapping("/claim-main")
 	public ResponseEntity<ClaimMain> createClaimMain(@RequestBody ClaimMain claimMain) {
@@ -99,6 +137,17 @@ public class ClaimMainController {
 
 		return new ResponseEntity<>(claimMainRepository.save(_claimMain), HttpStatus.OK);
 	}
+	
+	@PutMapping("/claim-main/desc/{id}")
+	public ResponseEntity<?> updateDesc(@PathVariable("id") long id, @RequestBody ClaimMain claimMain) {
+		int res = 0;
+		try {
+		 res = claimMainRepository.updateDesc(claimMain.getDescription(), id);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return new ResponseEntity<>(res, HttpStatus.OK);
+	}	
 
 	@DeleteMapping("/claim-main/{id}")
 	public ResponseEntity<HttpStatus> deleteClaimMain(@PathVariable("id") long id) {
